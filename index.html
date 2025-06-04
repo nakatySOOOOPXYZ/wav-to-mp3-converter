@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAV → MP3 変換ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #2b2b2b;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #3a3a3a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            color: #f4d03f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #cccccc;
+            font-size: 18px;
+        }
+
+        .dropzone {
+            border: 2px dashed #666666;
+            border-radius: 15px;
+            padding: 50px 20px;
+            text-align: center;
+            background-color: #2b2b2b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .dropzone:hover {
+            border-color: #f4d03f;
+            background-color: #333333;
+        }
+
+        .dropzone.dragover {
+            border-color: #f4d03f;
+            background-color: #333333;
+            transform: scale(1.02);
+        }
+
+        .dropzone p {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .dropzone .format {
+            color: #999999;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            background-color: #3a3a3a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .file-info p {
+            color: #999999;
+            font-size: 14px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .convert-button {
+            background-color: #f4d03f;
+            color: #1e1e1e;
+            display: none;
+        }
+
+        .convert-button.active {
+            display: block;
+        }
+
+        .convert-button:hover {
+            background-color: #e5c136;
+            transform: translateY(-2px);
+        }
+
+        .convert-button:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 18px;
+            color: #4ade80;
+            margin-bottom: 20px;
+        }
+
+        .success-message.active {
+            display: flex;
+        }
+
+        .download-button {
+            background-color: #5eead4;
+            color: #1e1e1e;
+            display: none;
+        }
+
+        .download-button.active {
+            display: block;
+        }
+
+        .download-button:hover {
+            background-color: #2dd4bf;
+            transform: translateY(-2px);
+        }
+
+        .progress {
+            display: none;
+            background-color: #3a3a3a;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress.active {
+            display: block;
+        }
+
+        .progress-bar {
+            background-color: #f4d03f;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: none;
+            text-align: center;
+            color: #999999;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .progress-text.active {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            color: #ef4444;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 WAV → MP3</h1>
+            <p>音声ファイル変換ツール</p>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+            <p>WAVファイルを選択またはドラッグ&ドロップ</p>
+            <p class="format">対応形式: .wav</p>
+        </div>
+
+        <input type="file" id="fileInput" accept=".wav,audio/wav">
+
+        <div class="file-info" id="fileInfo">
+            <h3 id="fileName"></h3>
+            <p id="fileSize"></p>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">ファイルを読み込み中...</div>
+
+        <button class="button convert-button" id="convertButton">MP3に変換</button>
+
+        <div class="success-message" id="successMessage">
+            <span>✅</span>
+            <span>変換完了！</span>
+        </div>
+
+        <button class="button download-button" id="downloadButton">MP3をダウンロード</button>
+
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <!-- lamejs library for MP3 encoding -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const convertButton = document.getElementById('convertButton');
+        const successMessage = document.getElementById('successMessage');
+        const downloadButton = document.getElementById('downloadButton');
+        const progress = document.getElementById('progress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let selectedFile = null;
+        let mp3Blob = null;
+        let mp3FileName = '';
+
+        // ドロップゾーンのクリックイベント
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // ドラッグオーバー
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        // ドラッグリーブ
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        // ドロップ
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // ファイル選択
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // ファイル処理
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.wav')) {
+                showError('WAVファイルを選択してください。');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            
+            fileInfo.classList.add('active');
+            convertButton.classList.add('active');
+            successMessage.classList.remove('active');
+            downloadButton.classList.remove('active');
+            errorMessage.classList.remove('active');
+            
+            // ファイル名からMP3ファイル名を生成
+            mp3FileName = file.name.replace(/\.wav$/i, '.mp3');
+        }
+
+        // ファイルサイズフォーマット
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        // エラー表示
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        // 変換ボタンクリック
+        convertButton.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            convertButton.disabled = true;
+            convertButton.textContent = '変換中...';
+            progress.classList.add('active');
+            progressText.classList.add('active');
+            errorMessage.classList.remove('active');
+            progressBar.style.width = '0%';
+
+            try {
+                // ステップ1: ファイル読み込み
+                progressText.textContent = 'ファイルを読み込み中...';
+                progressBar.style.width = '10%';
+                
+                const arrayBuffer = await selectedFile.arrayBuffer();
+                
+                // ステップ2: オーディオデコード
+                progressText.textContent = 'オーディオデータを解析中...';
+                progressBar.style.width = '20%';
+                
+                const audioContext = new AudioContext();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // ステップ3: MP3エンコーディング準備
+                progressText.textContent = 'MP3エンコードを準備中...';
+                progressBar.style.width = '30%';
+                
+                const sampleRate = audioBuffer.sampleRate;
+                const channels = audioBuffer.numberOfChannels;
+                const kbps = 128;
+                
+                const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
+                const mp3Data = [];
+                
+                // サンプルデータの準備
+                const sampleBlockSize = 1152;
+                const left = audioBuffer.getChannelData(0);
+                const right = channels > 1 ? audioBuffer.getChannelData(1) : audioBuffer.getChannelData(0);
+                
+                // Int16に変換
+                progressText.textContent = 'オーディオデータを変換中...';
+                progressBar.style.width = '40%';
+                
+                const leftInt16 = new Int16Array(left.length);
+                const rightInt16 = new Int16Array(right.length);
+                
+                for (let i = 0; i < left.length; i++) {
+                    leftInt16[i] = Math.max(-32768, Math.min(32767, left[i] * 32768));
+                    rightInt16[i] = Math.max(-32768, Math.min(32767, right[i] * 32768));
+                }
+                
+                // エンコード処理
+                progressText.textContent = 'MP3にエンコード中...';
+                const totalSamples = leftInt16.length;
+                let processedSamples = 0;
+                
+                for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
+                    const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
+                    const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
+                    const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(mp3buf);
+                    }
+                    
+                    // プログレスバー更新（40%から90%の範囲で更新）
+                    processedSamples = i + sampleBlockSize;
+                    const encodeProgress = Math.min(processedSamples / totalSamples, 1);
+                    const progressValue = 40 + (encodeProgress * 50);
+                    progressBar.style.width = progressValue + '%';
+                    
+                    // 100KB毎に進捗テキストを更新
+                    if (i % (sampleBlockSize * 100) === 0) {
+                        const percent = Math.round(encodeProgress * 100);
+                        progressText.textContent = `MP3にエンコード中... ${percent}%`;
+                    }
+                }
+                
+                // 残りのデータをフラッシュ
+                progressText.textContent = 'エンコードを完了中...';
+                progressBar.style.width = '95%';
+                
+                const mp3buf = mp3encoder.flush();
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+                
+                // Blob作成
+                progressText.textContent = 'ファイルを生成中...';
+                mp3Blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+                
+                // デバッグ情報
+                console.log('MP3 Blob created:', {
+                    size: mp3Blob.size,
+                    type: mp3Blob.type,
+                    dataLength: mp3Data.length
+                });
+                
+                // 完了表示
+                progressBar.style.width = '100%';
+                progressText.textContent = '変換完了！';
+                
+                setTimeout(() => {
+                    progress.classList.remove('active');
+                    progressText.classList.remove('active');
+                    successMessage.classList.add('active');
+                    downloadButton.classList.add('active');
+                    convertButton.textContent = 'MP3に変換';
+                    convertButton.disabled = false;
+                }, 1000);
+                
+            } catch (error) {
+                console.error('変換エラー:', error);
+                showError('変換中にエラーが発生しました。');
+                convertButton.textContent = 'MP3に変換';
+                convertButton.disabled = false;
+                progress.classList.remove('active');
+                progressText.classList.remove('active');
+            }
+        });
+
+        // ダウンロードボタンクリック
+        downloadButton.addEventListener('click', (event) => {
+            if (!mp3Blob) {
+                console.error('MP3 Blob が存在しません');
+                return;
+            }
+            
+            console.log('ダウンロード開始:', mp3FileName, mp3Blob.size, 'bytes');
+            console.log('Blob type:', mp3Blob.type);
+            
+            // 方法1: 標準的なダウンロード方法
+            try {
+                const url = URL.createObjectURL(mp3Blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = mp3FileName;
+                document.body.appendChild(a);
+                
+                // ユーザーイベント内で直接クリック
+                a.click();
+                
+                // クリーンアップ
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                console.log('方法1: 標準的なダウンロード実行');
+                
+            } catch (error) {
+                console.error('方法1失敗:', error);
+                
+                // 方法2: window.locationを使用
+                try {
+                    const url = URL.createObjectURL(mp3Blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = mp3FileName;
+                    a.style.display = 'none';
+                    
+                    // イベントを作成して発火
+                    const clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: false
+                    });
+                    
+                    document.body.appendChild(a);
+                    a.dispatchEvent(clickEvent);
+                    document.body.removeChild(a);
+                    
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    console.log('方法2: MouseEvent実行');
+                    
+                } catch (error2) {
+                    console.error('方法2失敗:', error2);
+                    
+                    // 方法3: 手動ダウンロードリンクを表示
+                    const url = URL.createObjectURL(mp3Blob);
+                    
+                    // 既存の手動リンクを削除
+                    const existingLink = document.querySelector('.manual-download-link');
+                    if (existingLink) existingLink.remove();
+                    
+                    const manualLink = document.createElement('a');
+                    manualLink.className = 'manual-download-link';
+                    manualLink.href = url;
+                    manualLink.download = mp3FileName;
+                    manualLink.textContent = '⬇ クリックしてダウンロード';
+                    manualLink.style.cssText = `
+                        display: block;
+                        margin: 20px auto;
+                        padding: 15px 30px;
+                        background-color: #5eead4;
+                        color: #1e1e1e;
+                        border-radius: 10px;
+                        text-align: center;
+                        text-decoration: none;
+                        font-weight: bold;
+                        font-size: 18px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    `;
+                    
+                    manualLink.onmouseover = () => {
+                        manualLink.style.backgroundColor = '#2dd4bf';
+                        manualLink.style.transform = 'translateY(-2px)';
+                    };
+                    
+                    manualLink.onmouseout = () => {
+                        manualLink.style.backgroundColor = '#5eead4';
+                        manualLink.style.transform = 'translateY(0)';
+                    };
+                    
+                    // ダウンロードボタンの後に追加
+                    downloadButton.parentNode.insertBefore(manualLink, downloadButton.nextSibling);
+                    
+                    // クリック後に削除
+                    manualLink.addEventListener('click', () => {
+                        setTimeout(() => {
+                            manualLink.remove();
+                            URL.revokeObjectURL(url);
+                        }, 1000);
+                    });
+                    
+                    console.log('方法3: 手動ダウンロードリンクを表示');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

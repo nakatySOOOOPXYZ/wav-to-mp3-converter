@@ -194,6 +194,18 @@
             transition: width 0.3s ease;
         }
 
+        .progress-percent {
+            display: none;
+            text-align: center;
+            color: #cccccc;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .progress-percent.active {
+            display: block;
+        }
+
         .progress-text {
             display: none;
             text-align: center;
@@ -215,6 +227,13 @@
 
         .error-message.active {
             display: block;
+        }
+
+        .copyright {
+            text-align: center;
+            color: #666666;
+            font-size: 12px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -240,6 +259,7 @@
         <div class="progress" id="progress">
             <div class="progress-bar" id="progressBar"></div>
         </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
         <div class="progress-text" id="progressText">ファイルを読み込み中...</div>
 
         <button class="button convert-button" id="convertButton">MP3に変換</button>
@@ -252,6 +272,7 @@
         <button class="button download-button" id="downloadButton">MP3をダウンロード</button>
 
         <div class="error-message" id="errorMessage"></div>
+        <p class="copyright">SOOOP の著作権です。</p>
     </div>
 
     <!-- lamejs library for MP3 encoding -->
@@ -269,6 +290,7 @@
         const progress = document.getElementById('progress');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
         const errorMessage = document.getElementById('errorMessage');
 
         let selectedFile = null;
@@ -347,30 +369,35 @@
         convertButton.addEventListener('click', async () => {
             if (!selectedFile) return;
 
-            convertButton.disabled = true;
-            convertButton.textContent = '変換中...';
-            progress.classList.add('active');
-            progressText.classList.add('active');
-            errorMessage.classList.remove('active');
-            progressBar.style.width = '0%';
+        convertButton.disabled = true;
+        convertButton.textContent = '変換中...';
+        progress.classList.add('active');
+        progressText.classList.add('active');
+        progressPercent.classList.add('active');
+        errorMessage.classList.remove('active');
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
 
             try {
                 // ステップ1: ファイル読み込み
-                progressText.textContent = 'ファイルを読み込み中...';
-                progressBar.style.width = '10%';
+            progressText.textContent = 'ファイルを読み込み中...';
+            progressBar.style.width = '10%';
+            progressPercent.textContent = '10%';
                 
                 const arrayBuffer = await selectedFile.arrayBuffer();
                 
                 // ステップ2: オーディオデコード
-                progressText.textContent = 'オーディオデータを解析中...';
-                progressBar.style.width = '20%';
+            progressText.textContent = 'オーディオデータを解析中...';
+            progressBar.style.width = '20%';
+            progressPercent.textContent = '20%';
                 
                 const audioContext = new AudioContext();
                 const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                 
                 // ステップ3: MP3エンコーディング準備
-                progressText.textContent = 'MP3エンコードを準備中...';
-                progressBar.style.width = '30%';
+            progressText.textContent = 'MP3エンコードを準備中...';
+            progressBar.style.width = '30%';
+            progressPercent.textContent = '30%';
                 
                 const sampleRate = audioBuffer.sampleRate;
                 const channels = audioBuffer.numberOfChannels;
@@ -385,8 +412,9 @@
                 const right = channels > 1 ? audioBuffer.getChannelData(1) : audioBuffer.getChannelData(0);
                 
                 // Int16に変換
-                progressText.textContent = 'オーディオデータを変換中...';
-                progressBar.style.width = '40%';
+            progressText.textContent = 'オーディオデータを変換中...';
+            progressBar.style.width = '40%';
+            progressPercent.textContent = '40%';
                 
                 const leftInt16 = new Int16Array(left.length);
                 const rightInt16 = new Int16Array(right.length);
@@ -414,6 +442,7 @@
                     const encodeProgress = Math.min(processedSamples / totalSamples, 1);
                     const progressValue = 40 + (encodeProgress * 50);
                     progressBar.style.width = progressValue + '%';
+                    progressPercent.textContent = Math.round(progressValue) + '%';
                     
                     // 100KB毎に進捗テキストを更新
                     if (i % (sampleBlockSize * 100) === 0) {
@@ -425,6 +454,7 @@
                 // 残りのデータをフラッシュ
                 progressText.textContent = 'エンコードを完了中...';
                 progressBar.style.width = '95%';
+                progressPercent.textContent = '95%';
                 
                 const mp3buf = mp3encoder.flush();
                 if (mp3buf.length > 0) {
@@ -444,11 +474,13 @@
                 
                 // 完了表示
                 progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
                 progressText.textContent = '変換完了！';
                 
                 setTimeout(() => {
                     progress.classList.remove('active');
                     progressText.classList.remove('active');
+                    progressPercent.classList.remove('active');
                     successMessage.classList.add('active');
                     downloadButton.classList.add('active');
                     convertButton.textContent = 'MP3に変換';
@@ -462,6 +494,7 @@
                 convertButton.disabled = false;
                 progress.classList.remove('active');
                 progressText.classList.remove('active');
+                progressPercent.classList.remove('active');
             }
         });
 

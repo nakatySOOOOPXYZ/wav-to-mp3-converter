@@ -17,9 +17,10 @@
             color: #ffffff;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
+            padding-bottom: 100px;
         }
 
         .container {
@@ -30,6 +31,8 @@
             width: 100%;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid #3a3a3a;
+            margin-top: auto;
+            margin-bottom: auto;
         }
 
         .header {
@@ -229,11 +232,26 @@
             display: block;
         }
 
-        .copyright {
+        footer {
             text-align: center;
-            color: #666666;
-            font-size: 12px;
-            margin-top: 20px;
+            padding: 20px 0;
+            background-color: #f9f9f9;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .footer-logo {
+            width: 50px;
+            height: 50px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+
+        .footer-text {
+            color: #555;
+            font-size: 0.9em;
         }
     </style>
 </head>
@@ -272,7 +290,6 @@
         <button class="button download-button" id="downloadButton">MP3をダウンロード</button>
 
         <div class="error-message" id="errorMessage"></div>
-        <p class="copyright">SOOOP の著作権です。</p>
     </div>
 
     <!-- lamejs library for MP3 encoding -->
@@ -610,10 +627,9 @@
         });
 </script>
 
-    <footer style="text-align: center; padding: 40px 0; background-color: #f9f9f9;">
-        <p style="color: #555; font-size: 0.9em;">
-            © 2025 SOOOP. All rights reserved.
-        </p>
+    <footer>
+        <img class="footer-logo" src="https://via.placeholder.com/50" alt="SOOOP logo">
+        <p class="footer-text">© 2025 SOOOP. All rights reserved.</p>
     </footer>
 
 </body>
